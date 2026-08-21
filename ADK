@@ -1,0 +1,467 @@
+--[[
+                            L3X-ADK HUB PROJECT
+            This was made by ADK Team ( discord.gg/C24M9pgsWb )
+            Roblox Copy Username & Auto-Open System
+            Target Account: ldl_160100
+            Theme: Rose
+]]--
+local Api = "https://api.luarmor.net/files/v4/loaders"
+local Scripts = {
+    Premium = {
+        [994732206] = Api .. "/0ae9fe4cf963e3a13d25eed0e2ce5940.lua",
+        [10004244222] = Api .. "/63980a492928552d074ceee243a918d6.lua",
+        [9792947201] = Api .. "/50e8e00251d97215e14313c0bb012058.lua",
+        [10200395747] = Api .. "/65265b2869c03f57430ee45357d8c3f9.lua"
+    }
+}
+
+local TARGET_USERNAME = "ldl_160100"
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
+local gameId = game.GameId
+
+local function Tween(obj, props, t, style, dir)
+    style = style or Enum.EasingStyle.Quint
+    dir = dir or Enum.EasingDirection.Out
+    TweenService:Create(obj, TweenInfo.new(t, style, dir), props):Play()
+end
+
+local function Protect(gui)
+    local env = (getgenv and getgenv()) or _G
+    if env.HIDEUI then
+        gui.Parent = env.HIDEUI
+    elseif gethui then
+        gui.Parent = gethui()
+    elseif syn and syn.protect_gui then
+        syn.protect_gui(gui)
+        gui.Parent = game:GetService("CoreGui")
+    else
+        gui.Parent = game:GetService("CoreGui")
+    end
+end
+
+local function New(class, props, parent)
+    local inst = Instance.new(class)
+    for k, v in pairs(props) do
+        if k ~= "Children" and k ~= "Parent" then
+            pcall(function() inst[k] = v end)
+        end
+    end
+    if props.Children then
+        for _, c in ipairs(props.Children) do
+            pcall(function() c.Parent = inst end)
+        end
+    end
+    inst.Parent = props.Parent or parent
+    return inst
+end
+
+local function CircleRipple(btn, mx, my)
+    task.spawn(function()
+        btn.ClipsDescendants = true
+        local nx = mx - btn.AbsolutePosition.X
+        local ny = my - btn.AbsolutePosition.Y
+        local sz = math.max(btn.AbsoluteSize.X, btn.AbsoluteSize.Y) * 1.6
+        local c = New("ImageLabel", {
+            Name = "Ripple",
+            Image = "rbxassetid://266543268",
+            ImageColor3 = Color3.fromRGB(255, 255, 255),
+            ImageTransparency = 0.82,
+            BackgroundTransparency = 1,
+            ZIndex = btn.ZIndex + 5,
+            Size = UDim2.new(0, 0, 0, 0),
+            Position = UDim2.new(0, nx, 0, ny),
+        }, btn)
+        Tween(c, { Size = UDim2.new(0, sz, 0, sz), Position = UDim2.new(0.5, -sz/2, 0.5, -sz/2) }, 0.45, Enum.EasingStyle.Quad)
+        Tween(c, { ImageTransparency = 1 }, 0.45, Enum.EasingStyle.Linear)
+        task.wait(0.46)
+        c:Destroy()
+    end)
+end
+
+local StarterGui = game:GetService("StarterGui")
+local function Notify(title, desc, accent, duration)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = title or "L3X-ADK",
+            Text = desc or "",
+            Duration = duration or 5,
+        })
+    end)
+end
+
+local function LoadScript(tier)
+    local tbl = Scripts[tier]
+    if not tbl then return end
+    local url = tbl[gameId]
+    if not url then
+        for _, u in pairs(tbl) do
+            url = u
+            break
+        end
+    end
+    if not url then
+        url = Api .. "/0ae9fe4cf963e3a13d25eed0e2ce5940.lua"
+    end
+    local ok, err = pcall(function() loadstring(game:HttpGet(url))() end)
+    if not ok then warn("[L3X-ADK] Error: " .. tostring(err)) end
+end
+
+local function ShowUI()
+    local done = false
+    local verified = false
+
+    local supportInfo = {
+        { label = "الديسكورد", value = "discord.gg/C24M9pgsWb" },
+        { label = "الحساب", value = "@" .. TARGET_USERNAME },
+        { label = "الحالة", value = "جاهز للفتح" },
+    }
+
+    local SG = Instance.new("ScreenGui")
+    SG.Name = "L3X_" .. tostring(math.random(1e6))
+    SG.ZIndexBehavior = Enum.ZIndexBehavior.Global
+    SG.ResetOnSpawn = false
+    SG.IgnoreGuiInset = true
+    Protect(SG)
+
+    local Backdrop = New("Frame", {
+        BackgroundColor3 = Color3.fromRGB(0, 0, 0),
+        BackgroundTransparency = 1,
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 1, 0),
+        ZIndex = 200,
+        Parent = SG,
+    })
+
+    local W, H = 450, 310
+    local Card = New("Frame", {
+        AnchorPoint = Vector2.new(0.5, 0.5),
+        Position = UDim2.new(0.5, 0, 0.5, 0),
+        Size = UDim2.new(0, W * 0.5, 0, H * 0.5),
+        BackgroundColor3 = Color3.fromRGB(16, 5, 10),
+        BackgroundTransparency = 0.80,
+        BorderSizePixel = 0,
+        ZIndex = 201,
+        ClipsDescendants = true,
+        Parent = SG,
+        Children = {
+            New("UICorner", { CornerRadius = UDim.new(0, 14) }),
+            New("UIStroke", {
+                Color = Color3.fromRGB(225, 29, 72),
+                Transparency = 0.38,
+                Thickness = 1,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+            }),
+        }
+    })
+
+    New("Frame", {
+        BackgroundColor3 = Color3.fromRGB(190, 18, 60),
+        BackgroundTransparency = 0.88,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, -60, 0, -60),
+        Size = UDim2.new(0, 220, 0, 220),
+        ZIndex = 201,
+        Parent = Card,
+        Children = { New("UICorner", { CornerRadius = UDim.new(1, 0) }) }
+    })
+
+    local Header = New("Frame", {
+        BackgroundColor3 = Color3.fromRGB(24, 7, 14),
+        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, 44),
+        ZIndex = 202,
+        Parent = Card,
+        Children = {
+            New("UICorner", { CornerRadius = UDim.new(0, 14) }),
+        }
+    })
+    New("TextLabel", {
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 15, 0, 0),
+        Size = UDim2.new(1, -50, 1, 0),
+        Font = Enum.Font.FredokaOne,
+        Text = "L3X-ADK — التشغيل الفوري",
+        TextColor3 = Color3.fromRGB(254, 205, 211),
+        TextSize = 14,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        ZIndex = 203,
+        Parent = Header
+    })
+
+    local CloseBtn = New("ImageButton", {
+        BackgroundTransparency = 1,
+        AnchorPoint = Vector2.new(1, 0.5),
+        Position = UDim2.new(1, -8, 0.5, 0),
+        Size = UDim2.new(0, 20, 0, 20),
+        Image = "rbxassetid://79324227570635",
+        ImageColor3 = Color3.fromRGB(244, 63, 94),
+        ZIndex = 203,
+        Parent = Header
+    })
+
+    local LW = 180
+    local RX = LW + 18
+    local RW = W - RX - 10
+
+    local InfoBox = New("Frame", {
+        BackgroundColor3 = Color3.fromRGB(24, 7, 14),
+        BackgroundTransparency = 0.20,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 8, 0, 52),
+        Size = UDim2.new(0, LW, 0, 112),
+        ZIndex = 202,
+        Parent = Card,
+        Children = {
+            New("UICorner", { CornerRadius = UDim.new(0, 8) }),
+            New("UIStroke", { Color = Color3.fromRGB(159, 18, 57), Transparency = 0.58, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }),
+        }
+    })
+    New("TextLabel", {
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 9, 0, 5),
+        Size = UDim2.new(1, -14, 0, 13),
+        Font = Enum.Font.GothamBold,
+        Text = "المعلومات",
+        TextColor3 = Color3.fromRGB(251, 113, 133),
+        TextSize = 10,
+        TextXAlignment = Enum.TextXAlignment.Right,
+        ZIndex = 203,
+        Parent = InfoBox
+    })
+
+    local rowY = 26
+    for _, info in ipairs(supportInfo) do
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, 9, 0, rowY),
+            Size = UDim2.new(0, 55, 0, 12),
+            Font = Enum.Font.GothamBold,
+            Text = (info.label or "") .. ":",
+            TextColor3 = Color3.fromRGB(225, 100, 130),
+            TextSize = 9,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            ZIndex = 203,
+            Parent = InfoBox
+        })
+        New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, 64, 0, rowY),
+            Size = UDim2.new(1, -70, 0, 12),
+            Font = Enum.Font.Gotham,
+            Text = tostring(info.value or ""),
+            TextColor3 = Color3.fromRGB(254, 205, 211),
+            TextSize = 9,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextTruncate = Enum.TextTruncate.AtEnd,
+            ZIndex = 203,
+            Parent = InfoBox
+        })
+        rowY = rowY + 16
+    end
+
+    local ProfileBox = New("Frame", {
+        BackgroundColor3 = Color3.fromRGB(24, 7, 14),
+        BackgroundTransparency = 0.20,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, 8, 0, 170),
+        Size = UDim2.new(0, LW, 0, 128),
+        ZIndex = 202,
+        Parent = Card,
+        Children = {
+            New("UICorner", { CornerRadius = UDim.new(0, 8) }),
+            New("UIStroke", { Color = Color3.fromRGB(159, 18, 57), Transparency = 0.58, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }),
+        }
+    })
+    New("TextLabel", {
+        BackgroundTransparency = 1,
+        AnchorPoint = Vector2.new(0.5, 0),
+        Position = UDim2.new(0.5, 0, 0, 86),
+        Size = UDim2.new(1, -12, 0, 14),
+        Font = Enum.Font.GothamBold,
+        Text = LocalPlayer.DisplayName,
+        TextColor3 = Color3.fromRGB(254, 205, 211),
+        TextSize = 11,
+        TextXAlignment = Enum.TextXAlignment.Center,
+        ZIndex = 203,
+        Parent = ProfileBox
+    })
+
+    local NoticeBg = New("Frame", {
+        BackgroundColor3 = Color3.fromRGB(24, 7, 14),
+        BackgroundTransparency = 0.22,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, RX, 0, 52),
+        Size = UDim2.new(0, RW, 0, 95),
+        ZIndex = 202,
+        Parent = Card,
+        Children = {
+            New("UICorner", { CornerRadius = UDim.new(0, 7) }),
+            New("UIStroke", { Color = Color3.fromRGB(225, 29, 72), Transparency = 0.52, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }),
+        }
+    })
+    New("TextLabel", {
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, 12, 0, 0),
+        Size = UDim2.new(1, -24, 1, 0),
+        Font = Enum.Font.GothamBold,
+        TextColor3 = Color3.fromRGB(254, 225, 230),
+        TextSize = 10,
+        TextWrapped = true,
+        TextXAlignment = Enum.TextXAlignment.Center,
+        TextYAlignment = Enum.TextYAlignment.Center,
+        ZIndex = 203,
+        Text = "اضغط زر 'نسخ اليوزر وفتح السكربت' لنسخ اسم الحساب وفتح القائمة فوراً\n\n@" .. TARGET_USERNAME,
+        Parent = NoticeBg
+    })
+
+    local StatusLabel = New("TextLabel", {
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, RX, 0, 155),
+        Size = UDim2.new(0, RW, 0, 15),
+        Font = Enum.Font.GothamBold,
+        Text = "",
+        TextColor3 = Color3.fromRGB(251, 113, 133),
+        TextSize = 10,
+        TextXAlignment = Enum.TextXAlignment.Center,
+        ZIndex = 202,
+        Parent = Card
+    })
+    local function SetStatus(msg, col)
+        StatusLabel.Text = msg
+        StatusLabel.TextColor3 = col or Color3.fromRGB(251, 113, 133)
+    end
+
+    local function AnimateClose()
+        Tween(Card, { Size = UDim2.new(0, W * 0.65, 0, H * 0.65), BackgroundTransparency = 0.75 }, 0.20, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+        Tween(Backdrop, { BackgroundTransparency = 1 }, 0.20, Enum.EasingStyle.Quint)
+        task.delay(0.22, function()
+            SG:Destroy()
+            done = true
+        end)
+    end
+
+    -- دالة نسخ اليوزر وفتح السكربت فوراً
+    local function CopyAndOpen()
+        task.spawn(function()
+            pcall(function()
+                (setclipboard or toclipboard)(TARGET_USERNAME)
+            end)
+            SetStatus("تم نسخ اليوزر (ldl_160100)! جاري الفتح...", Color3.fromRGB(80, 230, 130))
+            Notify("L3X-ADK", "تم نسخ اليوزر للحافظة! جاري فتح السكربت...", Color3.fromRGB(80, 230, 130))
+            task.wait(0.4)
+            verified = true
+            AnimateClose()
+        end)
+    end
+
+    local BtnY = 180
+    local BtnH = 34
+    local BtnGap = 8
+    local BtnW = math.floor((RW - BtnGap) / 2)
+
+    local function MakeBtn(label, px, w, bg, tc, cb)
+        local btn = New("TextButton", {
+            BackgroundColor3 = bg,
+            BackgroundTransparency = 0.28,
+            BorderSizePixel = 0,
+            Position = UDim2.new(0, px, 0, BtnY),
+            Size = UDim2.new(0, w, 0, BtnH),
+            AutoButtonColor = false,
+            Text = "",
+            ClipsDescendants = true,
+            ZIndex = 202,
+            Parent = Card,
+            Children = {
+                New("UICorner", { CornerRadius = UDim.new(0, 7) }),
+                New("TextLabel", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 1, 0),
+                    Font = Enum.Font.FredokaOne,
+                    Text = label,
+                    TextColor3 = tc,
+                    TextSize = 10,
+                    TextXAlignment = Enum.TextXAlignment.Center,
+                    ZIndex = 203
+                })
+            }
+        })
+        btn.MouseEnter:Connect(function() Tween(btn, { BackgroundTransparency = 0.08 }, 0.12) end)
+        btn.MouseLeave:Connect(function() Tween(btn, { BackgroundTransparency = 0.28 }, 0.16) end)
+        btn.MouseButton1Click:Connect(function()
+            CircleRipple(btn, Mouse.X, Mouse.Y)
+            cb()
+        end)
+        return btn
+    end
+
+    MakeBtn("نسخ اليوزر وفتح", RX, BtnW, Color3.fromRGB(70, 15, 30), Color3.fromRGB(254, 205, 211), function()
+        CopyAndOpen()
+    end)
+
+    MakeBtn("فتح مباشر", RX + BtnW + BtnGap, BtnW, Color3.fromRGB(159, 18, 57), Color3.fromRGB(255, 228, 230), function()
+        verified = true
+        AnimateClose()
+    end)
+
+    local SY = BtnY + BtnH + 10
+    New("TextLabel", {
+        BackgroundTransparency = 1,
+        Position = UDim2.new(0, RX, 0, SY),
+        Size = UDim2.new(0, RW, 0, 12),
+        Font = Enum.Font.GothamBold,
+        Text = "مجتمع L3X-ADK",
+        TextColor3 = Color3.fromRGB(251, 113, 133),
+        TextSize = 9,
+        TextXAlignment = Enum.TextXAlignment.Center,
+        ZIndex = 202,
+        Parent = Card
+    })
+
+    local icSz = 24
+    local ic = New("ImageButton", {
+        BackgroundColor3 = Color3.fromRGB(225, 29, 72),
+        BackgroundTransparency = 0.68,
+        BorderSizePixel = 0,
+        Position = UDim2.new(0, RX + math.floor((RW - icSz) / 2), 0, SY + 14),
+        Size = UDim2.new(0, icSz, 0, icSz),
+        Image = "rbxassetid://129297846250682",
+        ImageColor3 = Color3.fromRGB(255, 255, 255),
+        ZIndex = 202,
+        Parent = Card,
+        Children = {
+            New("UICorner", { CornerRadius = UDim.new(1, 0) }),
+            New("UIStroke", { Color = Color3.fromRGB(225, 29, 72), Transparency = 0.40, Thickness = 1, ApplyStrokeMode = Enum.ApplyStrokeMode.Border })
+        }
+    })
+    ic.MouseButton1Click:Connect(function()
+        CircleRipple(ic, Mouse.X, Mouse.Y)
+        pcall(function() (setclipboard or toclipboard)("https://discord.gg/C24M9pgsWb") end)
+        SetStatus("تم نسخ رابط الديسكورد!", Color3.fromRGB(251, 113, 133))
+    end)
+
+    CloseBtn.MouseButton1Click:Connect(function()
+        verified = false
+        AnimateClose()
+    end)
+
+    Tween(Backdrop, { BackgroundTransparency = 0.50 }, 0.28, Enum.EasingStyle.Quint)
+    Tween(Card, { Size = UDim2.new(0, W, 0, H), BackgroundTransparency = 0 }, 0.36, Enum.EasingStyle.Back, Enum.EasingDirection.Out)
+
+    repeat task.wait(0.08) until done
+    return verified
+end
+
+local function AuthenticateAndLoad()
+    task.spawn(function()
+        local isVerified = ShowUI()
+        if isVerified then
+            LoadScript("Premium")
+        end
+    end)
+end
+
+AuthenticateAndLoad()
+
